@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/laohanlinux/go-logger/logger"
+	logger "log"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 // if will create a new writeable file
 func checkWriteableFile(bc *BitCask) {
 	if bc.writeFile.writeOffset > bc.Opts.MaxFileSize && bc.writeFile.fileID != uint32(time.Now().Unix()) {
-		logger.Info("open a new data/hint file:", bc.writeFile.writeOffset, bc.Opts.MaxFileSize)
+		logger.Print("open a new data/hint file:", bc.writeFile.writeOffset, bc.Opts.MaxFileSize)
 		//close data/hint fp
 		bc.writeFile.hintFp.Close()
 		bc.writeFile.fp.Close()

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/laohanlinux/go-logger/logger"
+	logger "log"
 )
 
 // ErrNotFound ...
@@ -116,6 +116,12 @@ func (bc *BitCask) Put(key []byte, value []byte) error {
 	return nil
 }
 
+func (bc *BitCask) Visit(visitor func(key string)) {
+	for k := range keyDirs.entrys {
+		visitor(k)
+	}
+}
+
 // Get ...
 func (bc *BitCask) Get(key []byte) ([]byte, error) {
 	e := keyDirs.get(string(key))
@@ -126,7 +132,7 @@ func (bc *BitCask) Get(key []byte) ([]byte, error) {
 	fileID := e.fileID
 	bf, err := bc.getFileState(fileID)
 	if err != nil && os.IsNotExist(err) {
-		logger.Warn("key:", string(key), "=>the file is not exits:", fileID)
+		logger.Print("key:", string(key), "=>the file is not exits:", fileID)
 		//time.Sleep(time.Second)
 		return nil, err
 	}

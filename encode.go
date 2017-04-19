@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"hash/crc32"
 
-	"github.com/laohanlinux/go-logger/logger"
+	logger "log"
 )
 
 // ErrCrc32 ...
@@ -41,7 +41,7 @@ func DecodeEntry(buf []byte) ([]byte, error) {
 	c32 := binary.LittleEndian.Uint32(buf[:4])
 	value := make([]byte, valuesz)
 	copy(value, buf[(HeaderSize+ksz):(HeaderSize+ksz+valuesz)])
-	logger.Info(c32)
+	logger.Print(c32)
 	if crc32.ChecksumIEEE(buf[4:]) != c32 {
 		return nil, ErrCrc32
 	}
@@ -60,7 +60,6 @@ func DecodeEntryHeader(buf []byte) (uint32, uint32, uint32, uint32) {
 	valuesz := binary.LittleEndian.Uint32(buf[12:HeaderSize])
 	return c32, tStamp, ksz, valuesz
 }
-
 
 // DecodeEntryDetail ...
 func DecodeEntryDetail(buf []byte) (uint32, uint32, uint32, uint32, []byte, []byte, error) {
