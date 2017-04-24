@@ -116,10 +116,66 @@ func (bc *BitCask) Put(key []byte, value []byte) error {
 	return nil
 }
 
-func (bc *BitCask) Visit(visitor func(key string)) {
+func (bc *BitCask) VisitKeys(visitor func(key []byte)) {
 	for k := range keyDirs.entrys {
-		visitor(k)
+		visitor([]byte(k))
 	}
+}
+
+func (bc *BitCask) Count() int {
+	return len(keyDirs.entrys)
+}
+
+func (bc *BitCask) VisitKeysAndValues(visitor func(key []byte, val []byte)) {
+	buf := make([]byte, HeaderSize)
+	fp, err := os.Open(bc.writeFile.fp.Name())
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	offset := int64(0)
+	for {
+		n, err := fp.ReadAt(buf, offset)
+		if err != nil && err != io.EOF {
+			logger.Fatal(err)
+		}
+		if err == io.EOF {
+			break
+		}
+		if n != len(buf) || n != HeaderSize {
+			logger.Fatal(n)
+		}
+		offset += int64(n)
+		// parse data header
+		//c32, tStamp, ksz, valuesz := DecodeEntryHeader(buf)
+		//logger.Println(c32, tStamp, "ksz:", ksz, "valuesz:", valuesz)
+		_, _, ksz, valuesz := DecodeEntryHeader(buf)
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		if ksz+valuesz == 0 {
+			continue
+		}
+
+		keyValue := make([]byte, ksz+valuesz)
+
+		n, err = fp.ReadAt(keyValue, offset)
+		if err != nil && err != io.EOF {
+			logger.Fatal(err)
+		}
+		visitor(keyValue[:ksz], keyValue[ksz:])
+		if err == io.EOF {
+			break
+		}
+		offset += int64(n)
+		//fmt.Println(string(keyValue[:ksz]), string(keyValue[ksz:]))
+	}
+}
+
+func (bc *BitCask) HasKey(key string) bool {
+	_, ok := keyDirs.entrys[key]
+	return ok
 }
 
 // Get ...
